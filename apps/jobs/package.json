@@ -1,0 +1,27 @@
+{
+  "name": "jobs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "tsx src/run.ts",
+    "run:local": "tsx --env-file=.env src/run.ts",
+    "typecheck": "tsc --noEmit",
+    "add-sources": "tsx --env-file=.env src/cli.ts"
+  },
+  "dependencies": {
+    "@grantly/core": "workspace:*",
+    "@grantly/pipeline": "workspace:*",
+    "@supabase/supabase-js": "^2.119.0",
+    "heic-convert": "^2.1.0",
+    "resend": "^6.37.0",
+    "tsx": "^4.23.15",
+    "unpdf": "^2.1.0"
+  },
+  "optionalDependencies": {
+    "playwright": "1.65.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}

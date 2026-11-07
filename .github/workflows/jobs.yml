@@ -1,0 +1,63 @@
+name: Grantly background jobs
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+    - cron: "15 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      force_reminders:
+        description: "Send today's reminder digest even if already sent"
+        type: boolean
+        default: false
+
+concurrency:
+  group: grantly-jobs
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      APP_URL: ${{ secrets.APP_URL }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      REMINDER_FROM: ${{ secrets.REMINDER_FROM }}
+      FORCE_REMINDERS: ${{ inputs.force_reminders && '1' || '0' }}
+      TIME_BUDGET_MIN: "12"
+    steps:
+      - name: Check secrets
+        id: secrets
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SECRET_KEY" ]; then
+            echo "::warning::SUPABASE_URL / SUPABASE_SECRET_KEY secrets are not set yet. Skipping."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.ready == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.secrets.outputs.ready == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install OCR tools
+        if: steps.secrets.outputs.ready == 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-hin tesseract-ocr-mar poppler-utils qpdf
+      - name: Install dependencies
+        if: steps.secrets.outputs.ready == 'true'
+        run: pnpm install --frozen-lockfile --filter jobs...
+      - name: Install headless browser
+        if: steps.secrets.outputs.ready == 'true'
+        run: pnpm --filter jobs exec playwright install --with-deps chromium
+      - name: Run jobs
+        if: steps.secrets.outputs.ready == 'true'
+        run: pnpm --filter jobs run run

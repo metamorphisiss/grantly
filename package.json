@@ -1,0 +1,19 @@
+{
+  "name": "grantly",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "jobs": "pnpm --filter jobs run run:local",
+    "test": "pnpm --filter @grantly/core --filter @grantly/pipeline test",
+    "typecheck": "pnpm -r typecheck",
+    "db:setup": "node scripts/db-setup.mjs",
+    "seed:build": "python3 scripts/gen_seed.py"
+  },
+  "devDependencies": {
+    "postgres": "^3.4.5"
+  }
+}
